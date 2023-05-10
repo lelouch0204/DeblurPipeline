@@ -15,6 +15,18 @@ class EstimateBlur:
         os.makedirs(self.hq_dir, exist_ok=True)
         os.makedirs(self.lq_dir, exist_ok=True)
         
+    def create_synthetic_paired_dataset(self):
+        ksize, sigma = self.return_best_config()
+        i = 0
+        for hq_file in self.hq_filelist:
+            img = cv2.imread(hq_file)
+            blur_img = self.synthetic_blur(hq_file, ksize=ksize, sigma=sigma)
+            fname = '{:0>4}.png'.format(i)
+            hq_fpath = os.path.join(self.hq_dir, fname)
+            blur_fpath = os.path.join(self.lq_dir, fname)
+            cv2.imwrite(hq_fpath, img)
+            cv2.imwrite(blur_fpath, blur_img)
+        
     def return_best_config(self):
         ksizes = list(range(5, 26, 2))
         sigmas = list(range(1, 26))
@@ -46,6 +58,7 @@ class EstimateBlur:
                 
         psnrs = sorted(psnrs, key=lambda x : x['psnr'], reverse=True)
         return psnrs[0]['ksize'], psnrs[0]['sigma']
+    
     def calc_psnr(img1, img2):
         mse = np.mean((img1 - img2)**2)
         if mse == 0:
