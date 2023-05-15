@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import brisque
+from tqdm import tqdm
 
 class ImageQuality:
     def __init__(self, filelist):
@@ -13,19 +14,25 @@ class BRISQUE(ImageQuality):
     def calculate_quality(self):
         quality_list = []
         obj = brisque.BRISQUE(url=False)
-        for file in self.filelist:
-            img = cv2.imread(file)
+        for file in tqdm(self.filelist):
+            print(file)
+            img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+            img = 255 - img
+            # print(img.shape)
             score = obj.score(img)
             info_dict = {
                 'Image Path': file,
                 'Score': score
             }
+            quality_list.append(info_dict)
+        print('Finished calculating image quality')
         return quality_list
     
 class VarianceBased(ImageQuality):
     def calculate_image_quality(file_path):
         img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-        img_inverted = 255 - img
+        img = 255 - img
+        # img_inverted = 255 - img
 
         xs = img.shape[1]
         ys = img.shape[0]
@@ -167,12 +174,13 @@ class VarianceBased(ImageQuality):
     
     def calculate_quality(self):
         quality_list = []
-        for file in self.filelist:
+        for file in tqdm(self.filelist):
             score = self.calculate_image_quality(file)
             info_dict = {
                 'Image Path': file,
                 'Score': score
             }
+            quality_list.append(info_dict)
         return quality_list
     
 class Sharpness(ImageQuality):
@@ -184,6 +192,7 @@ class Sharpness(ImageQuality):
 
     def calculate_image_quality(self, img_path):
         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        img = 255 - img
         sharpness = self.tenengrad(img, 1, 3)
         brightness = np.mean(img)
         contrast = np.std(img)
@@ -195,16 +204,18 @@ class Sharpness(ImageQuality):
     
     def calculate_quality(self):
         quality_list = []
-        for file in self.filelist:
+        for file in tqdm(self.filelist):
             score = self.calculate_image_quality(file)
             info_dict = {
                 'Image Path': file,
                 'Score': score
             }
+            quality_list.append(info_dict)
         return quality_list
     
 class MetricFactory:
-    def create_metric(self, filelist, metric='BRISQUE'):
+    def create_metric(filelist, metric='BRISQUE'):
+        print(filelist)
         if metric.lower() == 'brisque':
             return BRISQUE(filelist)
         elif metric.lower() == 'variance':

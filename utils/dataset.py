@@ -1,16 +1,23 @@
 import os
 from typing import Any
-from metrics import MetricFactory
-from estimate import EstimateBlur
+from utils.metrics import MetricFactory
+from utils.estimate import EstimateBlur
 
 class Dataset:
     def __init__(self, args):
-        self.filelist = args.filelist
+        self.filepaths = args.filepaths
         self.metric_name = args.metric
         self.output_file = args.output_file
         self.output_root_dir = args.output_root_dir
-        self.metric = MetricFactory(self.filelist, self.metric_name)
+        
         self.threshold = args.threshold
+        
+        with open(self.filepaths, 'r') as f:
+            filelist = [line.strip() for line in f.readlines()]
+        
+        self.filelist = filelist
+        # print(filelist)
+        self.metric = MetricFactory.create_metric(filelist=self.filelist, metric=self.metric_name)
         
     def create_file(self):
         hq_filelist = []
@@ -29,7 +36,9 @@ class Dataset:
         return hq_filelist, lq_filelist
     
     def __call__(self):
+        print('Starting quality calculation')
         self.quality_list = self.metric.calculate_quality()
+        # print('Finished Calculating quality')
         self.hq_filelist, self.lq_filelist = self.create_file()
         self.estimate_blur = EstimateBlur(self.hq_filelist, self.lq_filelist, self.output_root_dir)
         self.estimate_blur.create_synthetic_paired_dataset()
