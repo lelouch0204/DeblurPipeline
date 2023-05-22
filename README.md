@@ -18,6 +18,7 @@ The repository provides three metrics for calculating image quality:
  1. `BRISQUE`
  2. `Variance Based`
  3. `Sharpness`
+
 The source code for which can be found in `utils/metrics.py` 
 You can also provide a threshold for deciding the quality of the images between good and bad
 
